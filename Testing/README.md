@@ -1,1 +1,1 @@
-## My testing attemps for parsing the puzzle grid
+## My testing attempt for parsing the puzzle grid
