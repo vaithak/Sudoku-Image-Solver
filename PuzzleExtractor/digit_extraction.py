@@ -10,6 +10,35 @@ def get_square_centers(transformed_img):
 
   return centers_X, centers_Y
 
+def extract_digit_from_cell(digit):
+  if(np.sum(digit) < 255*5):
+    return digit
+
+  contours, _ = cv2.findContours(digit.copy(), cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_SIMPLE)
+  grid_cnt = np.array(sorted(contours, key=lambda x: cv2.contourArea(x), reverse=True))
+  mask = np.zeros_like(digit)
+  cv2.drawContours(mask, grid_cnt, 0, 255, -1) # Draw filled contour in mask
+  out = np.zeros_like(digit) # Extract out the object and place into output image
+  out[mask == 255] = digit[mask == 255]
+
+  # Now crop
+  (y, x) = np.where(mask == 255)
+  (topy, topx) = (np.min(y), np.min(x))
+  (bottomy, bottomx) = (np.max(y), np.max(x))
+  out = out[topy:bottomy+1, topx:bottomx+1]
+  #out = cv2.resize(out, (16,16), interpolation=cv2.INTER_AREA)
+
+  # Now place on top of black image of size same as passed image in center
+  res = np.zeros_like(digit)
+  hh, ww = res.shape[0], res.shape[1]
+  h, w = out.shape[0], out.shape[1]
+  yoff = round((hh-h)/2)
+  xoff = round((ww-w)/2)
+
+  # use numpy indexing to place the resized image in the center of background image
+  res[yoff:yoff+h, xoff:xoff+w] = out
+  return res
+
 def centering_se(shape: (int, int), shape_ones: (int, int)):
   x = np.zeros(shape)
   assert (shape_ones[0] < shape[0]) and (shape_ones[1] < shape[1])
@@ -62,18 +91,16 @@ def recentre(img: np.ndarray, prev_center: (int, int), h_se: np.ndarray, v_se: n
 
 def preprocess_digit(digit_img):
   # remove possible edges from border
-  digit_img[0:4,:] = 0
-  digit_img[:,0:4] = 0
-  digit_img[-4:,:] = 0
-  digit_img[:,-4:] = 0
+  digit_img[0:3,:] = 0
+  digit_img[:,0:3] = 0
+  digit_img[-3:,:] = 0
+  digit_img[:,-3:] = 0
 
   # dilating and eroding the digit
-  se = cv2.getStructuringElement(cv2.MORPH_ELLIPSE,(3,3))
-  closed = cv2.morphologyEx(digit_img, cv2.MORPH_CLOSE, se)
   if(np.sum(digit_img) < 255*30):
-    closed = np.zeros(closed.shape)
+    return np.zeros_like(digit_img)
 
-  return closed
+  return digit_img
 
 
 def extractDigits(transformed_img):
@@ -102,7 +129,9 @@ def extractDigits(transformed_img):
 
     M = cv2.getPerspectiveTransform(np.float32([top_l, top_r, bottom_l, bottom_r]), np.float32([[0,0], [28,0], [0,28], [28,28]]))
     dst = cv2.warpPerspective(transformed_img,M,(28,28))
+    dst = dst.astype('uint8')
     dst_mod = preprocess_digit(dst)
+    dst_mod = extract_digit_from_cell(dst_mod)
     digits.append(dst_mod)
 
   return digits

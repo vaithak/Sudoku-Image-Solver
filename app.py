@@ -274,7 +274,7 @@ You can find the code [here](https://github.com/vaithak/Sudoku-Image-Solver)
 """
 
 
-images_list = ["image" + str(i) for i in range(1,9)]
+images_list = ["image" + str(i) for i in range(1,8)]
 models = ["Convolutional Neural Networks", "XGBoost Algorithm", "Softmax Regression"]
 
 
