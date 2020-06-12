@@ -268,7 +268,7 @@ Keras, Scikit-Learn : For implementing ML models for recognizing digits extracte
 I have also used Swig for creating Python bindings of C++ code for solving the puzzle recognized from the image.  
 
 Author: [Vaibhav Thakkar](https://github.com/vaithak)   
-You can find the code [here](https://github.com/vaithak/Sudoku-Image-Solver)  
+You can find the code [here](https://github.com/vaithak/SudokuImageSolver)  
 
 ---  
 """
